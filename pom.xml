@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-
+	
 	<parent>
-		<groupId>org.scijava</groupId>
-		<artifactId>pom-scijava</artifactId>
-		<version>36.0.0</version>
-		<relativePath />
+	  <groupId>org.scijava</groupId>
+	  <artifactId>pom-scijava</artifactId>
+	  <version>43.0.0</version>
+	  <relativePath/>
 	</parent>
 
-	<groupId>ai.biapy</groupId>
-	<artifactId>Biapy</artifactId>
+	<groupId>ai.BiaPy</groupId>
+	<artifactId>BiaPy-Java</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
-	<name>Biapy</name>
-	<description>A Java wrapper of some basic Biapy functionalities.</description>
-	<url>https://github.com/BiaPyX/</url>
+	<name>BiaPy-Java</name>
+	<description>A Java wrapper of some basic BiaPy functionalities.</description>
+	<url>https://github.com/BiaPyX/BiaPy-Java</url>
 	<inceptionYear>2019</inceptionYear>
 	<organization>
-		<name>Biapy</name>
+		<name>BiaPy</name>
 		<url>https://github.com/BiaPyX</url>
 	</organization>
 	<licenses>
@@ -53,7 +53,7 @@
 	<mailingLists>
 		<mailingList>
 			<name>Image.sc Forum</name>
-			<archive>https://forum.image.sc/tags/biapy</archive>
+			<archive>https://forum.image.sc/tags/BiaPy</archive>
 		</mailingList>
 	</mailingLists>
 
@@ -73,14 +73,16 @@
 	</ciManagement>
 
 	<properties>
-		<main-class>Biapy</main-class>
-		<automatic-module-name>ai.biapy</automatic-module-name>
+		<main-class>BiaPy</main-class>
+		<automatic-module-name>ai.BiaPy</automatic-module-name>
 
 		<license.licenseName>bsd_2</license.licenseName>
 		<license.copyrightOwners>null</license.copyrightOwners>
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
+		<maven.compiler.source>11</maven.compiler.source>
+  		<maven.compiler.target>11</maven.compiler.target>
 	</properties>
 	<repositories>
 		<repository>
@@ -94,7 +96,7 @@
 		<dependency>
 		  <groupId>io.bioimage</groupId>
 		  <artifactId>dl-modelrunner</artifactId>
-		  <version>0.5.10-SNAPSHOT</version>
+		  <version>0.5.10</version>
 		</dependency>
 		<!--MODEL RUNNER-->
 		<dependency>
@@ -109,6 +111,11 @@
 		<dependency>
 		    <groupId>com.formdev</groupId>
 		    <artifactId>flatlaf</artifactId>
+		</dependency>
+		<dependency>
+		  	<groupId>org.yaml</groupId>
+			<artifactId>snakeyaml</artifactId>
+			<version>2.2</version>
 		</dependency>
 
 	</dependencies>

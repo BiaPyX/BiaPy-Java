@@ -360,10 +360,10 @@ public class BiaPyInstanceSegmentationGUI extends JFrame {
         }
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            BiaPyInstanceSegmentationGUI gui = new BiaPyInstanceSegmentationGUI();
-            gui.setVisible(true);
-        });
-    }
+//    public static void main(String[] args) {
+//        SwingUtilities.invokeLater(() -> {
+//            BiaPyInstanceSegmentationGUI gui = new BiaPyInstanceSegmentationGUI();
+//            gui.setVisible(true);
+//        });
+//    }
 }
