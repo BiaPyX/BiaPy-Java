@@ -38,24 +38,21 @@ public class OptionMappingStepPanel extends JPanel {
         add(header, BorderLayout.NORTH);
 
         // Center: question + dropdown
-        JPanel center = new JPanel(new GridBagLayout());
+        JPanel center = new JPanel();
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(6, 6, 6, 6);
-        gbc.anchor = GridBagConstraints.WEST;
+        Insets insets = new Insets(6, 6, 6, 6);
+        center.setLayout(new GridLayout(0, 2, 0, 0));
+        center.add(new JLabel(spec.questionText));
 
-        gbc.gridx = 0; gbc.gridy = 0;
-        center.add(new JLabel(spec.questionText), gbc);
-
-        combo = new JComboBox<>(spec.options.toArray(new String[0]));
-        gbc.gridx = 1; gbc.gridy = 0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-        center.add(combo, gbc);
         add(center, BorderLayout.CENTER);
+        
+                // --- 2. JComboBox Constraints ---
+                combo = new JComboBox<>(spec.options.toArray(new String[0]));
+                add(combo, BorderLayout.SOUTH);
+                combo.addActionListener(e -> applyCurrentSelectionToConfig());
 
         // Initialize config with default selection, then keep it synced
         applyCurrentSelectionToConfig();
-        combo.addActionListener(e -> applyCurrentSelectionToConfig());
         
     }
 

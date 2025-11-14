@@ -290,7 +290,7 @@ public class WizardWindow extends JFrame {
 		  + "</p></html>";
 
 		QuestionSpec q4 = new QuestionSpec(
-		    "Step 4",
+		    "Question 4",
 		    "Please select the pretrained model trained with BiaPy before:",
 		    Arrays.asList("MODEL_BIAPY"),  // one “option” just to keep the structure uniform
 		    helpHtmlStep4,
@@ -319,7 +319,7 @@ public class WizardWindow extends JFrame {
 		  + "</html>";
 
 		QuestionSpec q5 = new QuestionSpec(
-		    "Step 5",
+		    "Question 5",
 		    "Please select a pretrained model by pressing 'Check models' below. "
 		      + "This process requires internet connection and may take a while.",
 		    Arrays.asList("MODEL_OTHERS"),
@@ -341,12 +341,438 @@ public class WizardWindow extends JFrame {
 		specs.add(q5);
 		conditions.add(cond5);
 		
+		// --- Q6 ---
+        String helpHtmlStep6 =
+            "<html>"
+          + "<p>"
+          + "This question is meant to determine the size of the objects of interest in your images. "
+          + "For example, if you're working on cell nucleus segmentation, you should have a general idea of the "
+          + "size these nuclei will appear in the images."
+          + "</p>"
+          + "<p>"
+          + "Continuing with the example, in the figure below, several cell nuclei are shown, all roughly the same size. "
+          + "If we measure one at random and find it is 24 pixels wide and 44 pixels tall, we can estimate the size range "
+          + "as 25–100 px. These measurements don't need to be exact, but they help BiaPy to set up a more optimized workflow."
+          + "</p>"
+          + "<div style='text-align:center;'>"
+          + "  <img src='" + classpathImageUrl("/wizard/object_size.png") + "' width='200px'/>"
+          + "</div>"
+          + "<br><br><br><br><br><br><br><br><br><br><br><br><br><br>"
+          + "</html>";
+        
+    	QuestionSpec q6 = new QuestionSpec(
+            "Question 6",
+            "What is the average object width/height in pixels?",
+            Arrays.asList(
+                "0-25 px",
+                "25-100 px",
+                "100-200 px",
+                "200-500 px",
+                "More than 500 px"
+            ),
+            helpHtmlStep6,
+            Arrays.asList(
+                QuestionSpec.kv(
+                    "DATA.PATCH_SIZE_XY", new int[]{256, 256},
+                    "TEST.POST_PROCESSING.REMOVE_CLOSE_POINTS_RADIUS", 10
+                ),
+                QuestionSpec.kv(
+                    "DATA.PATCH_SIZE_XY", new int[]{256, 256},
+                    "TEST.POST_PROCESSING.REMOVE_CLOSE_POINTS_RADIUS", 20
+                ),
+                QuestionSpec.kv(
+                    "DATA.PATCH_SIZE_XY", new int[]{512, 512},
+                    "TEST.POST_PROCESSING.REMOVE_CLOSE_POINTS_RADIUS", 30
+                ),
+                QuestionSpec.kv(
+                    "DATA.PATCH_SIZE_XY", new int[]{512, 512},
+                    "TEST.POST_PROCESSING.REMOVE_CLOSE_POINTS_RADIUS", 30
+                ),
+                QuestionSpec.kv(
+                    "DATA.PATCH_SIZE_XY", new int[]{1024, 1024},
+                    "TEST.POST_PROCESSING.REMOVE_CLOSE_POINTS_RADIUS", 30
+                )
+            )
+        );
+
+        // condition: OR on PROBLEM.TYPE, AND on MODEL.SOURCE
+        QuestionCondition cond6 = new QuestionCondition();
+        cond6.orCond.add(new Object[]{
+            "PROBLEM.TYPE",
+            Arrays.asList("SEMANTIC_SEG", "INSTANCE_SEG", "DETECTION", "CLASSIFICATION", "IMAGE_TO_IMAGE")
+        });
+        cond6.andCond.add(new Object[]{"MODEL.SOURCE", "biapy"});
+
+        specs.add(q6);
+        conditions.add(cond6);
+		
+        // --- Q7 ---
+        String helpHtmlStep7 =
+            "<html>"
+          + "<p>"
+          + "This question aims to determine the size of the objects of interest in your images along the Z axis. "
+          + "For example, if you're working on cell nucleus segmentation, you should have a rough idea of how many slices "
+          + "the nuclei will appear across in the images. Refer to the image below for a clearer, visual understanding of this concept."
+          + "</p>"
+          + "<div style='text-align:center;'>"
+          + "  <img src='" + classpathImageUrl("/wizard/object_slices.png") + "' width='200px'/>"
+          + "</div>"
+          + "<br><br><br><br><br><br><br><br><br><br><br><br><br><br>"
+          + "</html>";
+
+        QuestionSpec q7 = new QuestionSpec(
+            "Question 7",
+            "How many slices can an object be represented in?",
+            Arrays.asList(
+                "1-5 slices",
+                "5-10 slices",
+                "10-20 slices",
+                "20-60 slices",
+                "More than 60 slices"
+            ),
+            helpHtmlStep7,
+            Arrays.asList(
+                QuestionSpec.kv("DATA.PATCH_SIZE_Z", 5),
+                QuestionSpec.kv("DATA.PATCH_SIZE_Z", 10),
+                QuestionSpec.kv("DATA.PATCH_SIZE_Z", 20),
+                QuestionSpec.kv("DATA.PATCH_SIZE_Z", 40),
+                QuestionSpec.kv("DATA.PATCH_SIZE_Z", 80)
+            )
+        );
+
+        // condition: AND on PROBLEM.NDIM & MODEL.SOURCE, OR on PROBLEM.TYPE
+        QuestionCondition cond7 = new QuestionCondition();
+        cond7.andCond.add(new Object[]{"PROBLEM.NDIM", "3D"});
+        cond7.andCond.add(new Object[]{"MODEL.SOURCE", "biapy"});
+        cond7.orCond.add(new Object[]{"PROBLEM.TYPE", Arrays.asList(
+            "SEMANTIC_SEG", "INSTANCE_SEG", "DETECTION", "CLASSIFICATION", "IMAGE_TO_IMAGE"
+        )});
+
+        specs.add(q7);
+        conditions.add(cond7);
+
+        
+		// --- Q8 ---
+		String helpHtmlStep8 =
+		    "<html>"
+		  + "<p>"
+		  + "This question is meant to determine which phases of the workflow you want to perform."
+		  + "</p>"
+		  + "<p>"
+		  + "Before using a deep learning model, it needs to be trained. The goal is to train the model on a specific task, "
+		  + "then apply it to new images. For instance, you might train a model to classify images based on their labels. "
+		  + "If the training is successful, the model should be able to classify new images automatically. "
+		  + "This final phase is known as 'Test', sometimes referred to as 'Inference' or 'Prediction', "
+		  + "which all describe the process of applying the model's knowledge to new data."
+		  + "</p>"
+		  + "</html>";
+
+		QuestionSpec q8 = new QuestionSpec(
+		    "Question 8",
+		    "What do you want to do?",
+		    Arrays.asList(
+		        "Train a model",
+		        "Test a model",
+		        "Train and test the model"
+		    ),
+		    helpHtmlStep8,
+		    Arrays.asList(
+		        QuestionSpec.kv(
+		            "TRAIN.ENABLE", Boolean.TRUE,
+		            "TEST.ENABLE", Boolean.FALSE
+		        ),
+		        QuestionSpec.kv(
+		            "TRAIN.ENABLE", Boolean.FALSE,
+		            "TEST.ENABLE", Boolean.TRUE
+		        ),
+		        QuestionSpec.kv(
+		            "TRAIN.ENABLE", Boolean.TRUE,
+		            "TEST.ENABLE", Boolean.TRUE
+		        )
+		    )
+		);
+
+		specs.add(q8);
+		conditions.add(null);
+
+		
+        // --- Q9 ---
+        String helpHtmlStep9 =
+            "<html>"
+          + "<p>"
+          + "In this step, you need to specify the folder where the images for training the network are located. "
+          + "All these images must have the same number of channels. It's also important that each channel contains "
+          + "the same type of information to avoid confusing the model."
+          + "</p>"
+          + "<p>"
+          + "The 'Check data' button will verify if the images within the selected folder can be read correctly by "
+          + "analyzing them one by one. This process may take some time, but it ensures that the images will be "
+          + "correctly read later in BiaPy. For this specific case, the following will be checked:"
+          + "</p>"
+          + "<ul>"
+          + "  <li><p>All images can be read properly.</p></li>"
+          + "  <li><p>All images have the same number of input channels.</p></li>"
+          + "  <li><p>All images are within the same value range. For example, if the images are in uint8 format, "
+          + "their values should be between 0 and 255. This must be true for all images.</p></li>"
+          + "</ul>"
+          + "</html>";
+
+        QuestionSpec q9 = new QuestionSpec(
+            "Question 9",
+            "Could you please specify the location of the training raw image folder? After that, click on the 'Check data' button to analyze the data.",
+            Arrays.asList("PATH"),     // same format as your wizard for path questions
+            helpHtmlStep9,
+            Arrays.asList(
+                QuestionSpec.kv(
+                    "DATA.TRAIN.PATH", ""   // empty string as in Python wizard
+                )
+            )
+        );
+
+        // condition: show only when TRAIN.ENABLE = true
+        QuestionCondition cond9 = new QuestionCondition();
+        cond9.andCond.add(new Object[]{"TRAIN.ENABLE", Boolean.TRUE});
+
+        specs.add(q9);
+        conditions.add(cond9);
+
+        // --- Q10 ---
+        String helpHtmlStep10 =
+            "<html>"
+          + "<p>"
+          + "In this step, you need to specify the directory where the training target data, also known as 'ground truth', "
+          + "is located. This target data will be used to train the network."
+          + "</p>"
+          + "<p>"
+          + "The 'Check data' button will verify that the files in the selected folder can be read properly by analyzing "
+          + "them one by one. This process may take some time, but it ensures that the data will be correctly read by BiaPy later."
+          + "</p>"
+          + "<p>"
+          + "The target and its verification vary depending on the workflow:"
+          + "</p>"
+          + "<ul>"
+          + "<li>"
+          + "For <strong>Semantic segmentation</strong>, single-channel images are expected, specifically semantic masks. "
+          + "Checks: all images readable, same number of channels, and the number of classes is extracted automatically."
+          + "</li>"
+          + "<li>"
+          + "For <strong>Instance segmentation</strong>, one or two-channel images are expected. The first channel contains "
+          + "instance masks; the second, if present, stores class information. Checks: readability, same channels, and auto class extraction."
+          + "</li>"
+          + "<li>"
+          + "For <strong>Detection</strong>, files with object center coordinates are expected. Checks: readability, presence of required "
+          + "columns, and auto-detection of number of classes if a 'class' column exists."
+          + "</li>"
+          + "<li>"
+          + "For <strong>Super-resolution</strong>, high-resolution images are expected (2× or 4× larger). Checks: readability, same channels, "
+          + "and consistent value range (e.g., uint8 → 0–255)."
+          + "</li>"
+          + "<li>"
+          + "For <strong>Image-to-Image</strong>, images are expected. Checks: readability, same channels, and consistent value range."
+          + "</li>"
+          + "</ul>"
+          + "</html>";
+
+        QuestionSpec q10 = new QuestionSpec(
+            "Question 10",
+            "Could you please specify the location of the training ground truth (target) folder? "
+          + "After that, click on the 'Check data' button to analyze the data.",
+            Arrays.asList("PATH"),
+            helpHtmlStep10,
+            Arrays.asList(
+                QuestionSpec.kv(
+                    "DATA.TRAIN.GT_PATH", ""   // empty string as in Python wizard
+                )
+            )
+        );
+
+        // Condition: TRAIN.ENABLE = true  AND  PROBLEM.TYPE ∈ {...}
+        QuestionCondition cond10 = new QuestionCondition();
+        cond10.andCond.add(new Object[]{"TRAIN.ENABLE", Boolean.TRUE});
+        cond10.orCond.add(new Object[]{
+            "PROBLEM.TYPE",
+            Arrays.asList(
+                "SEMANTIC_SEG",
+                "INSTANCE_SEG",
+                "DETECTION",
+                "SUPER_RESOLUTION",
+                "IMAGE_TO_IMAGE"
+            )
+        });
+
+        specs.add(q10);
+        conditions.add(cond10);
+
+        
+        // --- Q11 ---
+        String helpHtmlStep11 =
+            "<html>"
+          + "<p>"
+          + "In this step, you need to specify the folder where the images for testing the network are located. "
+          + "All these images must have the same number of channels. It's also important that each channel contains "
+          + "the same type of information to avoid confusing the model."
+          + "</p>"
+          + "<p>"
+          + "The 'Check data' button will verify if the images within the selected folder can be read correctly by "
+          + "analyzing them one by one. This process may take some time, but it ensures that the images will be "
+          + "correctly read later in BiaPy. For this specific case, the following will be checked:"
+          + "</p>"
+          + "<ul>"
+          + "  <li><p>All images can be read properly.</p></li>"
+          + "  <li><p>All images have the same number of input channels.</p></li>"
+          + "  <li><p>All images are within the same value range. For example, if the images are in uint8 format, "
+          +          "their values should be between 0 and 255. This must be true for all images.</p></li>"
+          + "</ul>"
+          + "</html>";
+
+        QuestionSpec q11 = new QuestionSpec(
+            "Question 11",
+            "Could you please specify the location of the test raw image folder? "
+          + "After that, click on the 'Check data' button to analyze the data.",
+            Arrays.asList("PATH"),
+            helpHtmlStep11,
+            Arrays.asList(
+                QuestionSpec.kv(
+                    "DATA.TEST.PATH", ""     // empty string as in Python wizard
+                )
+            )
+        );
+
+        // Condition: TEST.ENABLE = true
+        QuestionCondition cond11 = new QuestionCondition();
+        cond11.andCond.add(new Object[]{"TEST.ENABLE", Boolean.TRUE});
+
+        specs.add(q11);
+        conditions.add(cond11);
+
+        
+        // --- Q12 ---
+        String helpHtmlStep12 =
+            "<html>"
+          + "<p>"
+          + "This question is meant to determine whether you have target data, or ground truth, for the test data. "
+          + "If you have this, BiaPy will be able to calculate various metrics, which will vary depending on the "
+          + "selected workflow, to measure the model's performance."
+          + "</p>"
+          + "<p>"
+          + "If you answer 'Yes', a follow-up question will appear asking for the path to the target data."
+          + "</p>"
+          + "</html>";
+
+        QuestionSpec q12 = new QuestionSpec(
+            "Question 12",
+            "Do you have test ground truth (target) data?",
+            Arrays.asList(
+                "No",
+                "Yes"
+            ),
+            helpHtmlStep12,
+            Arrays.asList(
+                QuestionSpec.kv(
+                    "DATA.TEST.LOAD_GT", Boolean.FALSE
+                ),
+                QuestionSpec.kv(
+                    "DATA.TEST.LOAD_GT", Boolean.TRUE
+                )
+            )
+        );
+
+        // Condition:
+        // AND: TEST.ENABLE = true
+        // OR : PROBLEM.TYPE ∈ {SEMANTIC_SEG, INSTANCE_SEG, DETECTION, SUPER_RESOLUTION, IMAGE_TO_IMAGE}
+        QuestionCondition cond12 = new QuestionCondition();
+        cond12.andCond.add(new Object[]{"TEST.ENABLE", Boolean.TRUE});
+        cond12.orCond.add(new Object[]{
+            "PROBLEM.TYPE",
+            Arrays.asList(
+                "SEMANTIC_SEG",
+                "INSTANCE_SEG",
+                "DETECTION",
+                "SUPER_RESOLUTION",
+                "IMAGE_TO_IMAGE"
+            )
+        });
+
+        specs.add(q12);
+        conditions.add(cond12);
+
+        // --- Q13 ---
+        String helpHtmlStep13 =
+            "<html>"
+          + "<p>"
+          + "In this step, you need to specify the directory where the test target data, also known as 'ground truth', "
+          + "is located. This target data will be used to train the network."
+          + "</p>"
+          + "<p>"
+          + "The 'Check data' button will verify that the files in the selected folder can be read properly by analyzing "
+          + "them one by one. This process may take some time, but it ensures that the data will be correctly read by BiaPy later."
+          + "</p>"
+          + "<p>"
+          + "The target and its verification vary depending on the workflow:"
+          + "</p>"
+          + "<ul>"
+          + "<li>"
+          + "For <strong>Semantic segmentation</strong>, single-channel images are expected, specifically semantic masks. "
+          + "Checks: readability, consistent channels, and automatic class extraction."
+          + "</li>"
+          + "<li>"
+          + "For <strong>Instance segmentation</strong>, instance masks (and optionally class masks) are expected. "
+          + "Checks: readability, consistent channels, and automatic class extraction if class masks exist."
+          + "</li>"
+          + "<li>"
+          + "For <strong>Detection</strong>, files containing object centroid coordinates are expected. "
+          + "Checks: readability, presence of needed columns, and automatic class count extraction when 'class' column exists."
+          + "</li>"
+          + "<li>"
+          + "For <strong>Super-resolution</strong>, high-resolution images are expected. "
+          + "Checks: readability, consistent channels, and consistent value ranges."
+          + "</li>"
+          + "<li>"
+          + "For <strong>Image-to-Image</strong>, images are expected. "
+          + "Checks: readability, consistent channels, and consistent value ranges (e.g., uint8 → 0–255)."
+          + "</li>"
+          + "</ul>"
+          + "</html>";
+
+        QuestionSpec q13 = new QuestionSpec(
+            "Question 13",
+            "Could you please specify the location of the test ground truth (target) folder? "
+          + "After that, click on the 'Check data' button to analyze the data.",
+            Arrays.asList("PATH"),
+            helpHtmlStep13,
+            Arrays.asList(
+                QuestionSpec.kv(
+                    "DATA.TEST.GT_PATH", ""   // empty default value
+                )
+            )
+        );
+
+        // Conditions:
+        // AND: TEST.ENABLE = true, DATA.TEST.LOAD_GT = true
+        // OR:  PROBLEM.TYPE ∈ supported workflows
+        QuestionCondition cond13 = new QuestionCondition();
+        cond13.andCond.add(new Object[]{"TEST.ENABLE", Boolean.TRUE});
+        cond13.andCond.add(new Object[]{"DATA.TEST.LOAD_GT", Boolean.TRUE});
+        cond13.orCond.add(new Object[]{
+            "PROBLEM.TYPE",
+            Arrays.asList(
+                "SEMANTIC_SEG",
+                "INSTANCE_SEG",
+                "DETECTION",
+                "SUPER_RESOLUTION",
+                "IMAGE_TO_IMAGE"
+            )
+        });
+
+        specs.add(q13);
+        conditions.add(cond13);
+
         // Build panels
         stepPanels = new ArrayList<>();
         int idx = 0;
         for (QuestionSpec spec : specs) {
             // Number steps nicely if you want: "Step X of N"
-            String numbered = spec.stepTitle + " of " + specs.size();
+            String numbered = spec.stepTitle;
             QuestionSpec numberedSpec = new QuestionSpec(
                     numbered, spec.questionText, spec.options, spec.helpHtml, spec.optionAssignments
             );
@@ -370,6 +796,7 @@ public class WizardWindow extends JFrame {
                 step = n;
                 cardLayout.show(cards, String.valueOf(step));
             }
+            updateNavButtons(back, next, finish);
         });
         back.addActionListener(e -> {
             applyStepSelection(step);
@@ -378,6 +805,7 @@ public class WizardWindow extends JFrame {
                 step = p;
                 cardLayout.show(cards, String.valueOf(step));
             }
+            updateNavButtons(back, next, finish);
         });
 
         finish.addActionListener((ActionEvent e) -> {
@@ -403,9 +831,26 @@ public class WizardWindow extends JFrame {
     }
 
     private void updateNavButtons(JButton back, JButton next, JButton finish) {
-        back.setEnabled(step > 0);
-        next.setEnabled(step < stepPanels.size() - 1);
-        finish.setEnabled(step == stepPanels.size() - 1);
+        // find first and last *visible* steps
+        int firstVisible = 0;
+        for (int i = 0; i < specs.size(); i++) {
+            if (isVisibleStep(i)) {
+                firstVisible = i;
+                break;
+            }
+        }
+
+        int lastVisible = 0;
+        for (int i = specs.size() - 1; i >= 0; i--) {
+            if (isVisibleStep(i)) {
+                lastVisible = i;
+                break;
+            }
+        }
+
+        back.setEnabled(step > firstVisible);
+        next.setEnabled(nextVisibleFrom(step) != step);
+        finish.setEnabled(step == lastVisible);
     }
 
     private boolean isVisibleStep(int idx) {
