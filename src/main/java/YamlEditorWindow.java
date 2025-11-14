@@ -59,7 +59,7 @@ public class YamlEditorWindow extends JFrame {
     
     private void loadFile() {
         try {
-        	String content = Files.readString(yamlFile.toPath(), StandardCharsets.UTF_8);
+        	String content = new String(Files.readAllBytes(yamlFile.toPath()), StandardCharsets.UTF_8);
         	content = sanitizeYaml(content);
         	Yaml yaml = new Yaml();
         	Map<String, Object> data = yaml.load(content);
