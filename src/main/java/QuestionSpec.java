@@ -4,7 +4,8 @@ import java.util.Map;
 
 /** Describes one wizard question with options and per-option key→value assignments. */
 public class QuestionSpec {
-    public final String stepTitle;     // e.g., "Step 1 of N"
+    public final String stepTitle;     // e.g., "Question 1 of N"
+    public final String shortTitle;
     public final String questionText;  // the question to show
     public final List<String> options; // dropdown items in order
     public final String helpHtml;      // HTML for the Help dialog
@@ -14,13 +15,16 @@ public class QuestionSpec {
      * Example: optionAssignments.get(0).put("PROBLEM.NDIM", "3D")
      */
     public final List<Map<String, Object>> optionAssignments;
+	
 
     public QuestionSpec(String stepTitle,
+    					String shortTitle,
                         String questionText,
                         List<String> options,
                         String helpHtml,
                         List<Map<String, Object>> optionAssignments) {
         this.stepTitle = stepTitle;
+        this.shortTitle = shortTitle;
         this.questionText = questionText;
         this.options = options;
         this.helpHtml = helpHtml;

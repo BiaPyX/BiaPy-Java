@@ -12,13 +12,18 @@ public class WizardWindow extends JFrame {
     private java.util.List<JPanel> stepPanels;
     private final java.util.List<QuestionCondition> conditions = new java.util.ArrayList<>();
     private java.util.List<QuestionSpec> specs;
-    
+    private JList<String> tocList;
+    private DefaultListModel<String> tocModel;
+    private java.util.List<Integer> tocToStep = new ArrayList<>();
+
     public WizardWindow(Frame parent) {
         super("New Project Wizard");
         setSize(760, 520);
         setLocationRelativeTo(parent);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setContentPane(buildUI());
+        refreshTOC();
+
     }
 
     private static String classpathImageUrl(String absoluteResourcePath) {
@@ -51,6 +56,7 @@ public class WizardWindow extends JFrame {
             "</html>";
         QuestionSpec q1 = new QuestionSpec(
             "Question 1",
+            "Dimensions",
             "Are your images in 3D?",
             Arrays.asList("Yes", "No", "No but I would like to have a 3D stack output"),
             helpHtmlStep1,
@@ -189,11 +195,12 @@ public class WizardWindow extends JFrame {
 
         QuestionSpec q2 = new QuestionSpec(
             "Question 2",
+            "Workflow",
             "Do you want to:",
             Arrays.asList(
-                "Generate masks of different (or just one) objects/regions within the image",
+                "Generate masks of different objects/regions within the image",
                 "Generate masks for each object in the image",
-                "Identify and count roughly circular objects in the images, without needing an exact outline around each one",
+                "Identify circular objects (e.g. nuclei) in the image using points",
                 "Clean noisy images",
                 "Upsample images into higher resolution",
                 "Assign a label to each image",
@@ -251,6 +258,7 @@ public class WizardWindow extends JFrame {
 
         QuestionSpec q3 = new QuestionSpec(
             "Question 3",
+            "Model source", 
             "Do you want to use a pre-trained model?",
             Arrays.asList(
                 "No, I want to build a model from scratch",
@@ -291,6 +299,7 @@ public class WizardWindow extends JFrame {
 
 		QuestionSpec q4 = new QuestionSpec(
 		    "Question 4",
+		    "Load pretrained model",
 		    "Please select the pretrained model trained with BiaPy before:",
 		    Arrays.asList("MODEL_BIAPY"),  // one “option” just to keep the structure uniform
 		    helpHtmlStep4,
@@ -320,6 +329,7 @@ public class WizardWindow extends JFrame {
 
 		QuestionSpec q5 = new QuestionSpec(
 		    "Question 5",
+		    "Select pretrained model",
 		    "Please select a pretrained model by pressing 'Check models' below. "
 		      + "This process requires internet connection and may take a while.",
 		    Arrays.asList("MODEL_OTHERS"),
@@ -362,6 +372,7 @@ public class WizardWindow extends JFrame {
         
     	QuestionSpec q6 = new QuestionSpec(
             "Question 6",
+            "Object size",
             "What is the average object width/height in pixels?",
             Arrays.asList(
                 "0-25 px",
@@ -422,6 +433,7 @@ public class WizardWindow extends JFrame {
 
         QuestionSpec q7 = new QuestionSpec(
             "Question 7",
+            "Object depth",
             "How many slices can an object be represented in?",
             Arrays.asList(
                 "1-5 slices",
@@ -469,6 +481,7 @@ public class WizardWindow extends JFrame {
 
 		QuestionSpec q8 = new QuestionSpec(
 		    "Question 8",
+		    "Workflow phases",
 		    "What do you want to do?",
 		    Arrays.asList(
 		        "Train a model",
@@ -519,6 +532,7 @@ public class WizardWindow extends JFrame {
 
         QuestionSpec q9 = new QuestionSpec(
             "Question 9",
+            "Train data (raw)",
             "Could you please specify the location of the training raw image folder? After that, click on the 'Check data' button to analyze the data.",
             Arrays.asList("PATH"),     // same format as your wizard for path questions
             helpHtmlStep9,
@@ -575,6 +589,7 @@ public class WizardWindow extends JFrame {
 
         QuestionSpec q10 = new QuestionSpec(
             "Question 10",
+            "Train target (ground truth)",
             "Could you please specify the location of the training ground truth (target) folder? "
           + "After that, click on the 'Check data' button to analyze the data.",
             Arrays.asList("PATH"),
@@ -627,6 +642,7 @@ public class WizardWindow extends JFrame {
 
         QuestionSpec q11 = new QuestionSpec(
             "Question 11",
+            "Test data (raw)",
             "Could you please specify the location of the test raw image folder? "
           + "After that, click on the 'Check data' button to analyze the data.",
             Arrays.asList("PATH"),
@@ -661,6 +677,7 @@ public class WizardWindow extends JFrame {
 
         QuestionSpec q12 = new QuestionSpec(
             "Question 12",
+            "Test target data availability",
             "Do you have test ground truth (target) data?",
             Arrays.asList(
                 "No",
@@ -736,6 +753,7 @@ public class WizardWindow extends JFrame {
 
         QuestionSpec q13 = new QuestionSpec(
             "Question 13",
+            "Test target (ground truth)",
             "Could you please specify the location of the test ground truth (target) folder? "
           + "After that, click on the 'Check data' button to analyze the data.",
             Arrays.asList("PATH"),
@@ -766,28 +784,31 @@ public class WizardWindow extends JFrame {
 
         specs.add(q13);
         conditions.add(cond13);
-
-        // Build panels
-        stepPanels = new ArrayList<>();
-        int idx = 0;
-        for (QuestionSpec spec : specs) {
-            // Number steps nicely if you want: "Step X of N"
-            String numbered = spec.stepTitle;
-            QuestionSpec numberedSpec = new QuestionSpec(
-                    numbered, spec.questionText, spec.options, spec.helpHtml, spec.optionAssignments
-            );
-            OptionMappingStepPanel p = new OptionMappingStepPanel(numberedSpec, config);
-            stepPanels.add(p);
-            cards.add(p, String.valueOf(idx++));
-        }
-
-        root.add(cards, BorderLayout.CENTER);
-
+        
         // Navigation
         JPanel nav = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton back = new JButton("Back");
         JButton next = new JButton("Next");
         JButton finish = new JButton("Finish");
+        
+        // Build panels
+        stepPanels = new ArrayList<>();
+        int idx = 0;
+        for (QuestionSpec spec : specs) {
+        	final int stepIndex = idx;
+            OptionMappingStepPanel p = new OptionMappingStepPanel(
+                spec,
+                config,
+                () -> {
+                    // whenever the user changes the combo on this step:
+                    applyStepSelection(stepIndex);  // update answers / config / visibility
+                    refreshTOC();                   // update the left TOC
+                    updateNavButtons(back, next, finish); // optional but nice
+                }
+            );
+            stepPanels.add(p);
+            cards.add(p, String.valueOf(idx++));
+        }
 
         next.addActionListener(e -> {
             applyStepSelection(step);
@@ -797,6 +818,7 @@ public class WizardWindow extends JFrame {
                 cardLayout.show(cards, String.valueOf(step));
             }
             updateNavButtons(back, next, finish);
+            refreshTOC();
         });
         back.addActionListener(e -> {
             applyStepSelection(step);
@@ -806,10 +828,12 @@ public class WizardWindow extends JFrame {
                 cardLayout.show(cards, String.valueOf(step));
             }
             updateNavButtons(back, next, finish);
+            refreshTOC();
         });
 
         finish.addActionListener((ActionEvent e) -> {
             applyStepSelection(step);
+            refreshTOC();
             // For now, just show it:
             JOptionPane.showMessageDialog(this,
                     "Collected config:\n" + config,
@@ -826,6 +850,37 @@ public class WizardWindow extends JFrame {
         nav.add(next);
         nav.add(finish);
         root.add(nav, BorderLayout.SOUTH);
+
+        
+        // Left panel: TOC
+        tocModel = new DefaultListModel<>();
+        tocList = new JList<>(tocModel);
+        tocList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tocList.setPreferredSize(new Dimension(250, 400));
+
+        tocList.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int tocIdx = tocList.getSelectedIndex();
+                if (tocIdx >= 0 && tocIdx < tocToStep.size()) {
+                    int stepIndex = tocToStep.get(tocIdx);
+                    step = stepIndex;
+                    cardLayout.show(cards, String.valueOf(stepIndex));
+                    updateNavButtons(back, next, finish);
+                }
+            }
+        });
+        
+        JSplitPane split = new JSplitPane(
+                JSplitPane.HORIZONTAL_SPLIT,
+                new JScrollPane(tocList),
+                cards
+        );
+
+        // Optional: initial divider position
+        split.setDividerLocation(250);
+        split.setResizeWeight(0); // TOC stays fixed, cards expand
+
+        root.add(split, BorderLayout.CENTER);
 
         return root;
     }
@@ -873,11 +928,29 @@ public class WizardWindow extends JFrame {
     private void applyStepSelection(int stepIndex) {
         Component c = stepPanels.get(stepIndex);
         if (c instanceof OptionMappingStepPanel) {
-            ((OptionMappingStepPanel) c).applyCurrentSelectionToConfig();
+            ((OptionMappingStepPanel) c).applyCurrentSelectionToConfig();    
         }
+        refreshTOC();
     }
 
     public Map<String, Object> getCollectedConfig() { return config; }
+    
+    private void refreshTOC() {
+        tocModel.clear();
+        tocToStep.clear();
+
+        for (int i = 0; i < specs.size(); i++) {
+            if (isVisibleStep(i)) {
+                tocModel.addElement("Question " + (i+1) + ": " + specs.get(i).shortTitle);
+                tocToStep.add(i);
+            }
+        }
+
+        // Select current step
+        int idx = tocToStep.indexOf(step);
+        if (idx >= 0)
+            tocList.setSelectedIndex(idx);
+    }
 
 }
 

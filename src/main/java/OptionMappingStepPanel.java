@@ -6,11 +6,13 @@ public class OptionMappingStepPanel extends JPanel {
     private final JComboBox<String> combo;
     private final QuestionSpec spec;
     private final Map<String, Object> config;
+    private final Runnable answerChangedCallback;
 
-    public OptionMappingStepPanel(QuestionSpec spec, Map<String, Object> config) {
+    public OptionMappingStepPanel(QuestionSpec spec, Map<String, Object> config, Runnable answerChangedCallback) {
         super(new BorderLayout(10, 10));
         this.spec = spec;
         this.config = config;
+        this.answerChangedCallback = answerChangedCallback;
         setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
 
         // Header: title (left) + Help (right)
@@ -46,10 +48,18 @@ public class OptionMappingStepPanel extends JPanel {
 
         add(center, BorderLayout.CENTER);
         
-                // --- 2. JComboBox Constraints ---
-                combo = new JComboBox<>(spec.options.toArray(new String[0]));
-                add(combo, BorderLayout.SOUTH);
-                combo.addActionListener(e -> applyCurrentSelectionToConfig());
+        // --- 2. JComboBox Constraints ---
+        combo = new JComboBox<>(spec.options.toArray(new String[0]));
+        add(combo, BorderLayout.SOUTH);
+        combo.addActionListener(e -> {
+            // update config for this question
+            applyCurrentSelectionToConfig();
+
+            // let the wizard know that the answer changed
+            if (answerChangedCallback != null) {
+                answerChangedCallback.run();
+            }
+        });
 
         // Initialize config with default selection, then keep it synced
         applyCurrentSelectionToConfig();
@@ -62,6 +72,6 @@ public class OptionMappingStepPanel extends JPanel {
         // Write each key→value for this option into the shared config map
         for (Map.Entry<String, Object> en : assign.entrySet()) {
             config.put(en.getKey(), en.getValue());
-        }
+        } 
     }
 }
